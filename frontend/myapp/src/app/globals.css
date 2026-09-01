@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  --font-manrope: var(--font-manrope);
+  --font-reem-kufi: var(--font-reem-kufi);
+  --font-roboto: var(--font-roboto);
+}
