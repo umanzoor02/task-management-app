@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import TaskDetail, TaskListCreate, UserRegisterView,UserListView,AssignedTaskList,TaskCompletionUpdate
+from .views import TaskDetail, TaskListCreate, UserRegisterView,UserListView,AssignedTaskList,TaskCompletionUpdate,CurrentUserView
 
 
 urlpatterns = [
@@ -10,4 +10,5 @@ urlpatterns = [
     path('users/', UserListView.as_view(), name='user-list'),
     path('tasks/assigned/',AssignedTaskList.as_view(),name='assigned-task-list'),
     path('tasks/<int:pk>/completion/',TaskCompletionUpdate.as_view(),name='task-completion'),
+    path('users/me/', CurrentUserView.as_view(), name='current-user'),
 ]

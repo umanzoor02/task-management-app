@@ -5,6 +5,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  UserRound,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export default function TaskCard({ task, onToggle, onDelete, onEdit}) {
+export default function TaskCard({
+  task,
+  onToggle,
+  onDelete,
+  onEdit,
+  canManage = true,
+  assignedView = false,
+}) {
   return (
     <article className="group rounded-2xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start gap-4">
@@ -56,29 +64,31 @@ export default function TaskCard({ task, onToggle, onDelete, onEdit}) {
               )}
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
-                aria-label="Task options"
-              >
-                <MoreHorizontal className="size-4" />
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(task)}>
-                  <Pencil className="size-4" />
-                  Edit task
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => onDelete(task)}
-                  className="text-destructive focus:text-destructive"
+            {canManage && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                  aria-label="Task options"
                 >
-                  <Trash2 className="size-4" />
-                  Delete task
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <MoreHorizontal className="size-4" />
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(task)}>
+                    <Pencil className="size-4" />
+                    Edit task
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => onDelete(task)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                    Delete task
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -90,6 +100,20 @@ export default function TaskCard({ task, onToggle, onDelete, onEdit}) {
               <CalendarDays className="size-3.5" />
               Task no {task.id}
             </div>
+
+            {assignedView && task.owner_username && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <UserRound className="size-3.5" />
+                From {task.owner_username}
+              </div>
+            )}
+
+            {!assignedView && task.assigned_to_username && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <UserRound className="size-3.5" />
+                Assigned to {task.assigned_to_username}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { createTask } from '../lib/api';
+import { createTask, getUsers } from '../lib/api';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,8 +23,33 @@ export default function CreateTaskDialog({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    async function loadUsers() {
+      try {
+        setLoadingUsers(true);
+        setError(null);
+
+        const data = await getUsers();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+
+    loadUsers();
+  }, [open]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -38,16 +63,23 @@ export default function CreateTaskDialog({
       setSubmitting(true);
       setError(null);
 
-      const newTask = await createTask({
+      const taskData = {
         title: title.trim(),
         description: description.trim(),
         completed: false,
-      });
+      };
+
+      if (assignedTo) {
+        taskData.assigned_to = Number(assignedTo);
+      }
+
+      const newTask = await createTask(taskData);
 
       onTaskCreated(newTask);
 
       setTitle('');
       setDescription('');
+      setAssignedTo('');
       setOpen(false);
     } catch (err) {
       setError(err.message);
@@ -110,6 +142,37 @@ export default function CreateTaskDialog({
             />
           </div>
 
+          <div className="space-y-2">
+            <label
+              htmlFor="task-assignee"
+              className="text-sm font-medium"
+            >
+              Assign to
+            </label>
+
+            <select
+              id="task-assignee"
+              value={assignedTo}
+              onChange={(event) => setAssignedTo(event.target.value)}
+              disabled={loadingUsers}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">
+                {loadingUsers ? 'Loading users...' : 'Unassigned'}
+              </option>
+
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.username}
+                </option>
+              ))}
+            </select>
+
+            <p className="text-xs text-muted-foreground">
+              Optional. Choose another user responsible for this task.
+            </p>
+          </div>
+
           {error && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
               <p className="text-sm text-destructive">
@@ -128,7 +191,10 @@ export default function CreateTaskDialog({
               Cancel
             </Button>
 
-            <Button type="submit" disabled={submitting}>
+            <Button
+              type="submit"
+              disabled={submitting || loadingUsers}
+            >
               {submitting ? 'Creating...' : 'Create Task'}
             </Button>
           </DialogFooter>

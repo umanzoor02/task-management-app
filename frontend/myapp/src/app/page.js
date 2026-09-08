@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import EditTaskDialog from './components/EditTaskDialog';
 import AppSidebar from './components/AppSidebar';
@@ -11,34 +12,52 @@ import CreateTaskDialog from './components/CreateTaskDialog';
 
 import {
   deleteTask,
+  getAssignedTasks,
   getTasks,
+  updateAssignedTaskCompletion,
+  getCurrentUser,
   updateTask,
 } from './lib/api';
 
 export default function HomePage() {
   const [tasks, setTasks] = useState([]);
+  const [assignedTasks, setAssignedTasks] = useState([]);
+
+  const [section, setSection] = useState('my-tasks');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
+
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [editTaskOpen, setEditTaskOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-
+  const router = useRouter();
   useEffect(() => {
-    async function loadTasks() {
+    async function initializeDashboard() {
       try {
-        const data = await getTasks();
-        setTasks(data);
-      } catch (err) {
-        setError(err.message);
+        setLoading(true);
+        setError(null);
+
+        await getCurrentUser();
+
+        const [myTasksData, assignedTasksData] =
+          await Promise.all([
+            getTasks(),
+            getAssignedTasks(),
+          ]);
+
+        setTasks(myTasksData);
+        setAssignedTasks(assignedTasksData);
+      } catch {
+        router.replace('/login');
       } finally {
         setLoading(false);
       }
     }
 
-    loadTasks();
-  }, []);
-
+    initializeDashboard();
+  }, [router]);
+  
   function handleTaskCreated(newTask) {
     setTasks((currentTasks) => [
       newTask,
@@ -55,6 +74,28 @@ export default function HomePage() {
       });
 
       setTasks((currentTasks) =>
+        currentTasks.map((currentTask) =>
+          currentTask.id === updatedTask.id
+            ? updatedTask
+            : currentTask
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleToggleAssignedTask(task) {
+    try {
+      setError(null);
+
+      const updatedTask =
+        await updateAssignedTaskCompletion(
+          task.id,
+          !task.completed
+        );
+
+      setAssignedTasks((currentTasks) =>
         currentTasks.map((currentTask) =>
           currentTask.id === updatedTask.id
             ? updatedTask
@@ -99,7 +140,18 @@ export default function HomePage() {
     }
   }
 
-  const filteredTasks = tasks.filter((task) => {
+  function handleSectionChange(newSection) {
+    setSection(newSection);
+    setFilter('all');
+    setError(null);
+  }
+
+  const currentTasks =
+    section === 'my-tasks'
+      ? tasks
+      : assignedTasks;
+
+  const filteredTasks = currentTasks.filter((task) => {
     if (filter === 'completed') {
       return task.completed;
     }
@@ -122,10 +174,46 @@ export default function HomePage() {
               onNewTask={() => setCreateTaskOpen(true)}
             />
 
+            <div className="mt-6 inline-flex rounded-xl border bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() =>
+                  handleSectionChange('my-tasks')
+                }
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                  section === 'my-tasks'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                My Tasks
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {tasks.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleSectionChange('assigned')
+                }
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                  section === 'assigned'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Assigned to Me
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {assignedTasks.length}
+                </span>
+              </button>
+            </div>
+
             <TaskFilters
               filter={filter}
               setFilter={setFilter}
-              taskCount={tasks.length}
+              taskCount={currentTasks.length}
             />
 
             <div className="mt-6">
@@ -150,11 +238,15 @@ export default function HomePage() {
                 filteredTasks.length === 0 && (
                   <div className="rounded-2xl border border-dashed bg-card p-10 text-center">
                     <h3 className="text-lg font-semibold">
-                      No tasks found
+                      {section === 'my-tasks'
+                        ? 'No tasks found'
+                        : 'No tasks assigned to you'}
                     </h3>
 
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Create your first task to start organizing your work.
+                      {section === 'my-tasks'
+                        ? 'Create your first task to start organizing your work.'
+                        : 'Tasks assigned to you by other users will appear here.'}
                     </p>
                   </div>
                 )}
@@ -167,9 +259,15 @@ export default function HomePage() {
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onToggle={handleToggleTask}
+                        onToggle={
+                          section === 'my-tasks'
+                            ? handleToggleTask
+                            : handleToggleAssignedTask
+                        }
                         onEdit={handleEditTask}
                         onDelete={handleDeleteTask}
+                        canManage={section === 'my-tasks'}
+                        assignedView={section === 'assigned'}
                       />
                     ))}
                   </div>
@@ -184,6 +282,7 @@ export default function HomePage() {
         setOpen={setCreateTaskOpen}
         onTaskCreated={handleTaskCreated}
       />
+
       <EditTaskDialog
         open={editTaskOpen}
         setOpen={setEditTaskOpen}
