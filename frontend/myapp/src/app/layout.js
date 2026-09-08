@@ -19,7 +19,7 @@ const roboto = Roboto({
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${manrope.variable} ${reemKufi.variable} ${roboto.variable}`}>
-      <body className="min-h-full flex flex-col font-roboto">
+      <body className="min-h-full flex flex-col font-manrope">
         {children}
       </body>
     </html>
