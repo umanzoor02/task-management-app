@@ -5,13 +5,47 @@ from api.models import Task
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    owner_username = serializers.CharField(
+        source='owner.username',
+        read_only=True,
+    )
+
+    assigned_to_username = serializers.CharField(
+        source='assigned_to.username',
+        read_only=True,
+    )
+
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = [
+            'id',
+            'title',
+            'description',
+            'completed',
+            'owner',
+            'owner_username',
+            'assigned_to',
+            'assigned_to_username',
+        ]
+
+        read_only_fields = [
+            'id',
+            'owner',
+            'owner_username',
+            'assigned_to_username',
+        ]
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+    )
 
     class Meta:
         model = User
