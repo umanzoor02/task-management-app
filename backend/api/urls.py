@@ -1,10 +1,13 @@
 from django.urls import path
 
-from .views import TaskDetail, TaskListCreate, UserRegisterView
+from .views import TaskDetail, TaskListCreate, UserRegisterView,UserListView,AssignedTaskList,TaskCompletionUpdate
 
 
 urlpatterns = [
     path('tasks/', TaskListCreate.as_view(), name='task-list'),
     path('tasks/<int:pk>/', TaskDetail.as_view(), name='task-detail'),
     path('register/', UserRegisterView.as_view(), name='user-register'),
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('tasks/assigned/',AssignedTaskList.as_view(),name='assigned-task-list'),
+    path('tasks/<int:pk>/completion/',TaskCompletionUpdate.as_view(),name='task-completion'),
 ]
