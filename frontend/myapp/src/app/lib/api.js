@@ -64,7 +64,7 @@ async function authFetch(url, options = {}) {
 
 // Fetch all tasks
 export async function getTasks() {
-  const response = await fetch(`${API_URL}/tasks/`, {
+  const response = await authFetch(`${API_URL}/tasks/`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -78,10 +78,9 @@ export async function getTasks() {
 
   return response.json();
 }
-
 // Create a new task
 export async function createTask(taskData) {
-  const response = await fetch(`${API_URL}/tasks/`, {
+  const response = await authFetch(`${API_URL}/tasks/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -92,6 +91,61 @@ export async function createTask(taskData) {
   if (!response.ok) {
     throw new Error(
       `Failed to create task: ${response.status} ${response.statusText}`
+    );
+  }
+
+  return response.json();
+}
+
+// Get users available for task assignment
+export async function getUsers() {
+  const response = await authFetch(`${API_URL}/users/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+
+  return response.json();
+}
+
+// Get tasks assigned to the logged-in user
+export async function getAssignedTasks() {
+  const response = await authFetch(`${API_URL}/tasks/assigned/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch assigned tasks');
+  }
+
+  return response.json();
+}
+
+// Allow an assignee to change only the completion status
+export async function updateAssignedTaskCompletion(id, completed) {
+  const response = await authFetch(
+    `${API_URL}/tasks/${id}/completion/`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ completed }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to update task completion: ${response.status} ${response.statusText}`
     );
   }
 
@@ -175,4 +229,26 @@ export async function registerUser(userData) {
   }
 
   return data;
+}
+
+// Get the currently logged-in user
+export async function getCurrentUser() {
+  const response = await authFetch(`${API_URL}/users/me/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch current user');
+  }
+
+  return response.json();
+}
+
+// Log out the current user on the frontend
+export function logoutUser() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
 }
