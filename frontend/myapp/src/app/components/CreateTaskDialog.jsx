@@ -25,6 +25,7 @@ export default function CreateTaskDialog({
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [users, setUsers] = useState([]);
+  const [dueDate, setDueDate] = useState('');
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -67,6 +68,7 @@ export default function CreateTaskDialog({
         title: title.trim(),
         description: description.trim(),
         completed: false,
+        due_date: dueDate || null,
       };
 
       if (assignedTo) {
@@ -80,6 +82,7 @@ export default function CreateTaskDialog({
       setTitle('');
       setDescription('');
       setAssignedTo('');
+      setDueDate('');
       setOpen(false);
     } catch (err) {
       setError(err.message);
@@ -140,6 +143,26 @@ export default function CreateTaskDialog({
               placeholder="Add more details about this task..."
               rows={5}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="task-due-date"
+              className="text-sm font-medium"
+            >
+              Due date
+            </label>
+
+            <Input
+              id="task-due-date"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Optional. Choose when this task should be completed.
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -16,6 +16,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+function toDateTimeLocal(value) {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+
+  const localDate = new Date(
+    date.getTime() - offset * 60 * 1000
+  );
+
+  return localDate.toISOString().slice(0, 16);
+}
+
 export default function EditTaskDialog({
   open,
   setOpen,
@@ -24,6 +39,7 @@ export default function EditTaskDialog({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -34,9 +50,12 @@ export default function EditTaskDialog({
     if (task) {
       setTitle(task.title || '');
       setDescription(task.description || '');
+      setDueDate(toDateTimeLocal(task.due_date));
+
       setAssignedTo(
         task.assigned_to ? String(task.assigned_to) : ''
       );
+
       setError(null);
     }
   }, [task]);
@@ -82,6 +101,11 @@ export default function EditTaskDialog({
       const updatedTask = await updateTask(task.id, {
         title: title.trim(),
         description: description.trim(),
+
+        due_date: dueDate
+          ? new Date(dueDate).toISOString()
+          : null,
+
         assigned_to: assignedTo
           ? Number(assignedTo)
           : null,
@@ -111,7 +135,7 @@ export default function EditTaskDialog({
           <DialogTitle>Edit task</DialogTitle>
 
           <DialogDescription>
-            Update the task details or change who it is assigned to.
+            Update the task details, deadline, or assignment.
           </DialogDescription>
         </DialogHeader>
 
@@ -152,6 +176,28 @@ export default function EditTaskDialog({
               placeholder="Add more details about this task..."
               rows={5}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="edit-task-due-date"
+              className="text-sm font-medium"
+            >
+              Due date
+            </label>
+
+            <Input
+              id="edit-task-due-date"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(event) =>
+                setDueDate(event.target.value)
+              }
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Optional. Clear the field to remove the deadline.
+            </p>
           </div>
 
           <div className="space-y-2">
