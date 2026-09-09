@@ -3,7 +3,11 @@ import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export default function TaskHeader({ onNewTask }) {
+export default function TaskHeader({
+  onNewTask,
+  search,
+  setSearch,
+}) {
   return (
     <header>
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
@@ -31,6 +35,8 @@ export default function TaskHeader({ onNewTask }) {
         <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
         <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Search your tasks..."
           className="h-12 rounded-xl pl-11"
         />

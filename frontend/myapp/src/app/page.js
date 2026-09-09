@@ -27,6 +27,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [editTaskOpen, setEditTaskOpen] = useState(false);
@@ -152,15 +153,21 @@ export default function HomePage() {
       : assignedTasks;
 
   const filteredTasks = currentTasks.filter((task) => {
-    if (filter === 'completed') {
-      return task.completed;
-    }
+    const matchesFilter =
+      filter === 'completed'
+        ? task.completed
+        : filter === 'pending'
+          ? !task.completed
+          : true;
 
-    if (filter === 'pending') {
-      return !task.completed;
-    }
+    const searchTerm = search.trim().toLowerCase();
 
-    return true;
+    const matchesSearch =
+      searchTerm === '' ||
+      task.title.toLowerCase().includes(searchTerm) ||
+      (task.description || '').toLowerCase().includes(searchTerm);
+
+    return matchesFilter && matchesSearch;
   });
 
   return (
@@ -172,6 +179,8 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10">
             <TaskHeader
               onNewTask={() => setCreateTaskOpen(true)}
+              search={search}
+              setSearch={setSearch}
             />
 
             <div className="mt-6 inline-flex rounded-xl border bg-muted/40 p-1">
