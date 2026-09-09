@@ -96,8 +96,18 @@ export default function TaskCard({
               {task.completed ? 'Completed' : 'Pending'}
             </Badge>
 
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <CalendarDays className="size-3.5" />
+            {task.due_date && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CalendarDays className="size-3.5" />
+                Due{' '}
+                {new Date(task.due_date).toLocaleString([], {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </div>
+            )}
+
+            <div className="text-xs text-muted-foreground">
               Task no {task.id}
             </div>
 

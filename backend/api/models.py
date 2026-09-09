@@ -7,6 +7,11 @@ class Task(models.Model):
     description = models.TextField()
     completed = models.BooleanField(default=False)
 
+    due_date = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

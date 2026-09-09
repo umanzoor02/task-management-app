@@ -25,6 +25,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'owner',
             'owner_username',
             'assigned_to',
+            'due_date',
             'assigned_to_username',
         ]
 
