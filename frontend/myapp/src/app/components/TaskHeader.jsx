@@ -1,5 +1,7 @@
 import { Plus, Search } from 'lucide-react';
 
+import NotificationBell from './NotificationBell';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -25,10 +27,17 @@ export default function TaskHeader({
           </p>
         </div>
 
-        <Button onClick={onNewTask} className="h-11 rounded-xl px-5">
-          <Plus className="size-4" />
-          New Task
-        </Button>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+
+          <Button
+            onClick={onNewTask}
+            className="h-11 rounded-xl px-5"
+          >
+            <Plus className="size-4" />
+            New Task
+          </Button>
+        </div>
       </div>
 
       <div className="relative mt-8 max-w-xl">
