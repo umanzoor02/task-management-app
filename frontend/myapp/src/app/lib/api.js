@@ -252,3 +252,40 @@ export function logoutUser() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
 }
+
+
+export async function getNotifications() {
+  const response = await authFetch(`${API_URL}/notifications/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch notifications');
+  }
+
+  return response.json();
+}
+
+export async function markNotificationAsRead(id) {
+  const response = await authFetch(
+    `${API_URL}/notifications/${id}/`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        is_read: true,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to update notification');
+  }
+
+  return response.json();
+}

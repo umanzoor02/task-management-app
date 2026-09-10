@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from api.models import Task
+from api.models import  Notification,Task
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -34,6 +34,33 @@ class TaskSerializer(serializers.ModelSerializer):
             'owner',
             'owner_username',
             'assigned_to_username',
+        ]
+
+class NotificationSerializer(serializers.ModelSerializer):
+    task_title = serializers.CharField(
+        source='task.title',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id',
+            'task',
+            'task_title',
+            'notification_type',
+            'message',
+            'is_read',
+            'created_at',
+        ]
+
+        read_only_fields = [
+            'id',
+            'task',
+            'task_title',
+            'notification_type',
+            'message',
+            'created_at',
         ]
 
 class UserSerializer(serializers.ModelSerializer):

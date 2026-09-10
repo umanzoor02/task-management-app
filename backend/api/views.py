@@ -4,8 +4,8 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
-from .models import Task
-from .serializers import TaskSerializer, UserRegisterSerializer,UserSerializer
+from .models import Notification, Task
+from .serializers import TaskSerializer,NotificationSerializer,UserRegisterSerializer,UserSerializer
 
 
 class TaskListCreate(generics.ListCreateAPIView):
@@ -20,7 +20,15 @@ class TaskListCreate(generics.ListCreateAPIView):
         ).order_by('-id')
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        task = serializer.save(owner=self.request.user)
+
+        if task.assigned_to:
+            Notification.objects.create(
+                user=task.assigned_to,
+                task=task,
+                notification_type='assigned',
+                message=f'{self.request.user.username} assigned you "{task.title}"',
+            )
 
 class CurrentUserView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
@@ -44,6 +52,21 @@ class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Task.objects.filter(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        old_assignee = serializer.instance.assigned_to
+
+        task = serializer.save()
+
+        new_assignee = task.assigned_to
+
+        if new_assignee and old_assignee != new_assignee:
+            Notification.objects.create(
+                user=new_assignee,
+                task=task,
+                notification_type='assigned',
+                message=f'{self.request.user.username} assigned you "{task.title}"',
+            )
 
 
 class UserRegisterView(generics.CreateAPIView):
@@ -87,4 +110,33 @@ class TaskCompletionUpdate(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
+        if request.data['completed'] is True and task.owner:
+            Notification.objects.create(
+                user=task.owner,
+                task=task,
+                notification_type='completed',
+                message=f'{request.user.username} completed "{task.title}"',
+            )
+
         return Response(serializer.data)
+
+
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(
+            user=self.request.user
+        ).order_by('-created_at')
+
+
+class NotificationDetailView(generics.UpdateAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['patch']
+
+    def get_queryset(self):
+        return Notification.objects.filter(
+            user=self.request.user
+        )
